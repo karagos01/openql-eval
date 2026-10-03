@@ -1,0 +1,176 @@
+
+########## quaternion.py ##########
+
+Sec. 2.1, the 4x4 matrix
+  M(q) M(r) = M(qr) over 5000 random pairs
+    max absolute error            1.78e-15
+    relative to entry scale       1.51e-16
+  -> correct.  This is the left regular representation of H, and matrix
+     multiplication reproduces the Hamilton product exactly.  The claim
+     'isomorphic 4x4 real matrix' holds as written.
+
+  state carried by the node      4 real numbers
+  slots the matrix occupies      16
+  redundancy                     4 x
+
+Sec. 2.1, 'concatenating three such state matrices'
+  product equals blockwise (q_i r_i), max error  4.44e-16
+  perturbing block 0 of the operand moves block 0 by  1.940
+  and everything outside block 0 by                   0.000
+
+  structurally zero entries      96 of 144  (67 %)
+  nonzero entries in one node    48 of 144
+  entries coupling block i to j  0
+  state carried by the node      12 real numbers
+  slots the matrix occupies      144
+  redundancy                     12 x
+  -> the algebra is H (+) H (+) H.  The three quaternions cannot exchange
+     information, so the 12x12 node is three independent 4D systems in a
+     container 12 times larger than their state, not a unified field.
+
+Where does 12 come from?
+  Sec. 2.1   3 quaternions x 4 components                  = 12
+  Sec. 6     dim U(1) + dim SU(2) + dim SU(3) = 1 + 3 + 8  = 12
+  -> both appear in the paper and they are not the same 12: the first is
+     three copies of a 4D algebra, the second is the Lie algebra of a
+     12-dimensional group with no quaternionic block structure.  Nothing
+     in the paper connects them, and 112 is given no derivation at all
+     (112 = 28 x 4 = 14 x 8, neither of which the paper mentions).
+
+########## octonion.py ##########
+
+Associators of the published multiplication table
+  basis triples (i,j,k) with [e_i,e_j,e_k] != 0   168 of 512
+  rank of the span of those associators           7
+  dim Im O                                        7
+  real part reached by any associator             0.0e+00
+  -> the associators span Im O exactly, and never touch the real axis.
+
+Consequence for any matrix form
+  Matrix multiplication is associative, so an algebra homomorphism
+  phi: O -> M_n(R) obeys phi((xy)z) = phi(x(yz)), i.e. phi([x,y,z]) = 0.
+  The associators span a 7-dimensional subspace, so ker phi contains
+  all of Im O and phi retains 1 of 8 dimensions (12.5 %).
+  O is a simple algebra, so the only homomorphism into matrices is the
+  zero map.  'Octonion algebra as a block matrix' is not an engineering
+  problem; it has no solution at any n.
+
+Left regular representation, 5000 random pairs each
+  algebra      max |L_x L_y - L_xy|     relative
+  H  (4x4)                 1.78e-15     4.24e-16
+  O  (8x8)                 2.95e+01     2.76e+00
+  -> the identical construction is exact for H and wrong by order 1 for O.
+
+  L_x L_x vs L_(xx) on basis units (alternativity)  0.0e+00
+  L_x L_y vs L_(xy) for x != y                      2.0e+00
+  -> O is alternative, so squares still work; every mixed product does not.
+     An MMA pipeline computes mixed products, which is the whole point of
+     a 'unified' node, so the failure is exactly where the paper needs it
+     to succeed.
+
+########## symplectic.py ##########
+
+1. Harmonic oscillator, 100,000 steps, dt = 0.01, E(0) = 0.500000
+   update rule                                 E(end)         E/E0
+   leapfrog, no training                     0.499991            1
+   W in Sp(2), sigma = id,   b = 0                0.5            1
+   W in Sp(2), sigma = id,   b = 1e-3        0.547046         1.09
+   W in Sp(2), sigma = tanh, b = 0        1.00007e-05        2e-05
+   W in Sp(2), sigma = relu, b = 0        2.26962e-05     4.54e-05
+   -> the only row that conserves is the one where sigma is the identity
+      and b is zero, i.e. where the update is a linear symplectic map and
+      not a neural network layer at all.  tanh loses five orders of
+      magnitude of energy; a bias of 1e-3 gains 9 %.
+
+2. How large is the symplectic condition?
+      2n  dim GL(2n)  dim Sp(2n)  constraints  fraction
+      12         144          78           66    45.8%
+     112       12544        6328         6216    49.6%
+   a random 112x112 W misses the condition by max |W^T J W - J| = 1.186
+   -> at 112x112, 6216 of 12544 degrees of freedom must satisfy equalities
+      the paper never writes down.  Sp(112) is measure zero in GL(112).
+
+3. Train W and b on exact data, then roll out
+
+   harmonic (linear), E(0) = 1.125000
+     rule                        1-step err  |W^T J W - J|       E(1e5)       E/E0
+     leapfrog, no training                -              -      1.12498     1.0000
+     sigma(Wx+b), sigma = id       4.44e-16       3.33e-16      1.12498     1.0000
+     sigma(Wx+b), sigma = tanh     4.43e-02       2.69e-01      2.73851     2.4342
+
+   pendulum (nonlinear), E(0) = 1.416147
+     rule                        1-step err  |W^T J W - J|       E(1e5)       E/E0
+     leapfrog, no training                -              -      1.41612     1.0000
+     sigma(Wx+b), sigma = id       1.50e-03       2.49e-05      14.4747    10.2212
+     sigma(Wx+b), sigma = tanh     4.44e-02       2.69e-01      2.46981     1.7440
+
+   -> for the harmonic oscillator the true one-step map IS linear and
+      symplectic, so least squares recovers it to 4e-16 and energy is
+      conserved.  That is the special case, not the architecture working:
+      add the nonlinearity the paper specifies and the same system gains a
+      factor 2.4.  For the pendulum nothing conserves.  The linear fit is
+      accurate to 1.5e-3 after a single step, which is a good fit, and
+      ends ten times too energetic; the tanh fit lands at 1.74 x.  Neither
+      number is a correction loop away from 1.0000.  Leapfrog, with no
+      weights and no training, holds both to 5 decimal places, because
+      conservation is a property of the structure of the update and
+      sigma(W x + b) does not have that structure for any W and b.
+
+########## roofline.py ##########
+
+1. What a node stores
+   112x112 fp16 block matrix              24.5 KiB   <- 'tens of kilobytes', consistent
+   the 112 physical potentials           0.219 KiB
+   overhead of the matrix form             112 x
+   nonzero fraction if built from 28 quaternion 4x4 blocks    3.57%
+
+2. The matrix form buys no arithmetic intensity
+   operation                          FLOP     bytes  FLOP/byte
+   W @ S  (112x112 node)         2,809,856    50,176       56.0
+   W @ s  (112-vector)              25,088       448       56.0
+   RTX 3090 ridge point 152 FLOP/byte -> both are memory bound
+   -> identical position on the roofline, 112 x the FLOPs
+      and 112 x the traffic.  The block matrix is overhead,
+      not a path to the tensor cores.
+
+3. 'executed in a single clock cycle'
+   whole-chip fp16 throughput             83,529 FLOP/cycle
+   one node's W @ S                    2,809,856 FLOP
+   cycles, entire GPU on one node           33.6
+   and if (x) is read as written, a Kronecker product of two 112x112
+   matrices has 157,351,936 entries = 300 MiB per node.
+
+4. Resident nodes and the step rate
+        grid         nodes       S,S+1  x 24 GB  cards   s/step      Hz
+       32^3        32,768      1.5 GiB     0.1x      1    0.002   569.3
+       64^3       262,144     12.2 GiB     0.5x      1    0.014    71.2
+       80^3       512,000     23.9 GiB     1.0x      1    0.027    36.4
+      100^3     1,000,000     46.7 GiB     1.9x      2    0.054    18.7
+      128^3     2,097,152     98.0 GiB     4.1x      5    0.112     8.9
+      256^3    16,777,216    784.0 GiB    32.7x     33    0.899     1.1
+
+   nodes whose state alone fills 24 GB          513,588  (80^3)
+   nodes the bandwidth allows at 60 Hz          310,906  (68^3)
+   -> 'millions of nodes' needs 47 GiB per million for state alone, with
+      no weight matrices, no framebuffer and no rendering.  One card runs
+      a 68^3 grid at 60 Hz with zero pixels drawn.
+
+5. 'Tensor Core load in the efficient 15-20% range'
+   at 15% load the tensor cores deliver   21.3 TFLOP/s and  120.7 TFLOP/s sit idle
+   at 20% load the tensor cores deliver   28.4 TFLOP/s and  113.6 TFLOP/s sit idle
+   -> 15-20 % utilisation of the only unit the architecture depends on is
+      the symptom, not a design target.  The paper moves all physics onto
+      the tensor cores precisely so they are saturated; a pipeline that
+      leaves 80-85 % of them idle has not achieved that.  Item 2 above
+      gives the reason: at 56 FLOP/byte the node is memory bound, so the
+      tensor cores wait on VRAM no matter how the work is scheduled.
+
+6. 'molecular brute-force simulation' at one node per atom
+   atoms resident in 24 GB               513,588
+   as a cube of crystalline silicon         21.7 nm on a side
+   atoms in one mole                    6.02e+23
+   cards for one mole of nodes          1.17e+18
+   -> a 22 nm nanoparticle, state only, nothing else resident.  That is a
+      legitimate size for atomistic work, which is why the comparison
+      matters: molecular dynamics reaches it today with a few tens of
+      bytes per atom, not 24.5 KiB, and without claiming 112 dimensions.

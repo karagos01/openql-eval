@@ -23,6 +23,22 @@ case where the difference is zero.
 Reference [5] of the paper is Baez, "The Octonions", Bull. AMS 39 (2002), which
 states the non-associativity of O on its first page.  The one source cited for
 the octonion half of the architecture is the source that rules it out.
+
+Attribution added 9 October 2026.  Credit where it is due: the left regular
+representation measured below is Baez's own construction, from sec. 2.3 of that
+same reference -- "Left multiplication by any element a in K gives an operator
+L_a : K -> K, x -> ax", from which he derives a representation of the Clifford
+algebra Cliff(Im K) on K.  So the cited source does supply a real-matrix
+encoding of octonion multiplication, and the WEAK form of the paper's claim has
+support in it.  What this script measures is the boundary: L_x L_y is not
+L_{xy}, so the construction is a representation of operators and not an
+isomorphism of algebras, which is the form the architecture needs.  Baez also
+says the stronger thing himself -- "multiplication in this group is given by
+composition of real-linear operators, which is associative even for K = O" --
+i.e. the way out is to work in the associative operator algebra, which is
+exactly what openQL's block matrices would have to do.  The earlier version of
+this file measured all of that and credited none of it; see the companion
+reference-audit repository, which found it.
 """
 import itertools
 

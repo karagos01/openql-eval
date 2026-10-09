@@ -86,6 +86,7 @@ Delft ([10.1145/3474222](https://doi.org/10.1145/3474222)).
 - [`xternary-eval`](https://github.com/karagos01/xternary-eval) — the 2-bit LLM inference engine
 - [`causal-trilogy-eval`](https://github.com/karagos01/causal-trilogy-eval) — the CQFT / PCTP / SOTP trilogy of September 2026
 - [`cymatic-eval`](https://github.com/karagos01/cymatic-eval) — the cymatic stomatal stimulation and pulsed light proposal of October 2026
+- [`reference-audit`](https://github.com/karagos01/reference-audit) — whether all 69 citations in all 16 deposits say what they are cited for
 
 ## Licence
 
